@@ -1,32 +1,57 @@
+#!/bin/bash
+
+sudo pkill openvpn
+sudo pkill vncviewer
+
 while true
 do
- ping -c1 10.0.0.1 &>/dev/null; #Ping a google
+ ping -c1 8.8.8.8 &>/dev/null; #Ping a google
  
  if [ $? == 0 ]; 
   then
-    echo sudo openvpn --config /etc/openvpn/client.ovpn --daemon
-    echo Levantando VPN
-    ./ejemplo_vnc.sh & #mando llamar a que se active el servicio VNC
-    sleep 15
-  else
-    ping -c1 8.8.8.8 &> /dev/null #Ping al Server Dashboard 10.19.0.231
-    prueba2=$? #MANDA ERROR ES ESTA PARTE
-    if [ $prueba2 == 0 ];
-     then
-      echo Hay Conexion con el Servidor
-       sleep 15
-      #Regresar a ping 8.8.8.8
-     else
-         #numero 3 (bajar y subir la VPN)
-       echo sudo pkill ejemplo_vnc.sh #pkill VNC
-       echo sudo service openvpn stop
-       echo sudo killall openvpn
-       echo sudo openvpn --config /etc/openvpn/client.ovpn --daemon
-       echo sudo service openvpn start
-          sleep 15
-               #Regresar al inicio del ciclo
+    ps aux | grep openvpn | grep -v grep &>/dev/null;
+    NOTIF=$?
+    if [ $NOTIF == 0 ];
+    then
+	    echo ya esta corriendo el servicio VPN
+	    sleep 5
+    else
+	    echo Activando VPN
+	    sudo openvpn --config /etc/openvpn/client.ovpn &>/dev/null &
+	    sleep 3
+	    sudo ping -c1 10.8.0.1 &>/dev/null;
+	    proceso1=$?
+	    if [ $proceso1 -eq 0 ];
+	    then
+		    ps aux | grep vncviewer | grep -v grep &>/dev/null;
+		    Dato=$?
+		    if [ $Dato == 0 ];
+		    then
+			    echo Ya esta corriendo el servidor VNC
+			    sleep 1
+		    else
+			    echo Activando VNC
+			    sudo vncviewer 10.0.19.231:4 -passwd /home/linaro/.vnc/passwd -shared -DesktopSize 1920x1080 &>/dev/null &
+			    sleep 3
+		    fi
+	    else
+		    echo No hay Tx 
+	    fi
     fi
-
- fi
+else
+	ping 10.8.0.1 &>/dev/null;
+	gw=$?
+	if [ $gw -eq 0 ];
+	then
+		echo El proceso esta corriendo exitosamente
+		sleep 3
+	else
+		echo Eliminando VNC
+		sudo pkill vncviewer
+		sleep 1
+		echo Eliminando VPN
+		sudo pkill openvpn
+		sleep 1
+	fi
+fi
 done
-sleep 1
