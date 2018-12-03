@@ -15,6 +15,17 @@ do
     then
 	    echo ya esta corriendo el servicio VPN
 	    sleep 5
+	    ps aux | grep vncviewer | grep -v grep &>/dev/null;
+	    VAL=$?
+	    if [ $VAL == 0 ];
+	    then 
+		    echo Ya esta corriendo el proceso VNC
+		    sleep 5
+	    else
+		    echo activando VNC
+		    sudo vncviewer 10.0.19.231:4 -passwd /home/linaro/.vnc/passwd -Shared -DesktopSize 1920x1080 &>/dev/null &
+		    sleep 1
+	    fi
     else
 	    echo Activando VPN
 	    sudo openvpn --config /etc/openvpn/client.ovpn &>/dev/null &
